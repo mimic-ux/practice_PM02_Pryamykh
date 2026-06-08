@@ -1,0 +1,99 @@
+11.
+SELECT
+    p.name,
+    p.article,
+    COALESCE(SUM(i.quantity), 0) - COALESCE(SUM(o.quantity), 0) AS balance
+FROM Products p
+LEFT JOIN Incoming i ON p.id_product = i.id_product
+LEFT JOIN Outgoing o ON p.id_product = o.id_product
+GROUP BY p.id_product;
+
+
+12.
+SELECT i.date, p.name AS product_name, i.quantity, i.price
+FROM Incoming i
+JOIN Products p ON i.id_product = p.id_product
+JOIN Suppliers s ON i.id_supplier = s.id_supplier
+WHERE s.name = 'ООО МеталлТорг';
+
+
+13.
+SELECT
+    p.name,
+    COALESCE(SUM(i.quantity), 0) - COALESCE(SUM(o.quantity), 0) AS balance
+FROM Products p
+LEFT JOIN Incoming i ON p.id_product = i.id_product
+LEFT JOIN Outgoing o ON p.id_product = o.id_product
+GROUP BY p.id_product
+ORDER BY balance DESC;
+
+
+14.
+SELECT * FROM Products WHERE name LIKE 'К%';
+
+
+15.
+SELECT * FROM Incoming WHERE date >= CURDATE() - INTERVAL 3 DAY;
+
+
+16.
+SELECT p.name, SUM(i.quantity * i.price) AS total_spent
+FROM Incoming i
+JOIN Products p ON i.id_product = p.id_product
+GROUP BY p.id_product;
+
+
+17.
+SELECT AVG(price) AS avg_price FROM Incoming WHERE id_product = (
+    SELECT id_product FROM Products WHERE name = 'Гвозди строительные'
+);
+
+
+18.
+SELECT buyer, SUM(quantity * price) AS total_revenue FROM Outgoing GROUP BY buyer;
+
+
+19.
+SELECT s.name, SUM(i.quantity * i.price) AS total_summ
+FROM Incoming i
+JOIN Suppliers s ON i.id_supplier = s.id_supplier
+GROUP BY s.id_supplier
+HAVING total_summ > 150000;
+
+
+20.
+SELECT * FROM Products WHERE id_product NOT IN (SELECT DISTINCT id_product FROM Incoming);
+
+
+21.
+UPDATE Incoming SET price = price * 0.95 WHERE id_supplier = 2;
+
+
+22.
+DELETE FROM Outgoing WHERE date < '2024-01-01';
+
+
+23.
+ALTER TABLE Suppliers ADD COLUMN discount DECIMAL(5,2);
+
+
+24.
+CREATE VIEW StockBalance AS
+SELECT p.id_product, p.name,
+       COALESCE(SUM(i.quantity), 0) - COALESCE(SUM(o.quantity), 0) AS balance
+FROM Products p
+LEFT JOIN Incoming i ON p.id_product = i.id_product
+LEFT JOIN Outgoing o ON p.id_product = o.id_product
+GROUP BY p.id_product;
+
+25.
+SELECT p.name,
+       COALESCE(SUM(i.quantity), 0) AS total_incoming_qty,
+       COALESCE(SUM(o.quantity), 0) AS total_outgoing_qty,
+       COALESCE(SUM(i.quantity), 0) - COALESCE(SUM(o.quantity), 0) AS current_balance,
+       CASE WHEN SUM(i.quantity) > 0 THEN SUM(i.quantity * i.price) / SUM(i.quantity)
+            ELSE NULL END AS avg_purchase_price
+FROM Products p
+LEFT JOIN Incoming i ON p.id_product = i.id_product
+LEFT JOIN Outgoing o ON p.id_product = o.id_product
+GROUP BY p.id_product;
